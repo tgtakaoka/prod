@@ -20,6 +20,23 @@ define MSP_HELP
 endef
 HELP += $(MSP_HELP)
 
+ifdef USE_MSP430ELF
+
+#  Check if the user has GNU gcc
+GNUGCC_MIN_VER := 6.4
+GNUGCC_VER_OK := $(shell expr `msp430-elf-gcc -dumpversion` \>= '$(GNUGCC_MIN_VER)')
+ifeq ("$(GNUGCC_VER_OK)","0")
+  $(warning $(shell echo -e '$(WARN_STRING) Minimum recommended msp430-elf-gcc version for this TinyOS release is $(GNUGCC_MIN_VER)'))
+endif
+
+GCC     = msp430-elf-gcc
+OBJCOPY = msp430-elf-objcopy
+OBJDUMP = msp430-elf-objdump
+SIZE    = msp430-elf-size
+NM      = msp430-elf-nm
+
+else
+
 #  Check if the user has a new enough version of msp430-gcc
 MSPGCC_MIN_VER := 4.6.3
 MSPGCC_VER_OK := $(shell expr `msp430-gcc -dumpversion` \>= '$(MSPGCC_MIN_VER)')
@@ -32,11 +49,17 @@ OBJCOPY = msp430-objcopy
 OBJDUMP = msp430-objdump
 SIZE    = msp430-size
 NM      = msp430-nm
+
+endif
+
 LIBS    = -lm
 
 INSTALL_IHEX = $(MAIN_IHEX).out$(if $(NODEID),-$(NODEID),)
 
 PFLAGS += -Wall -Wshadow
+ifeq ($(GCC),msp430-elf-gcc)
+PFLAGS += -minrt -mrelax -I%T/chips/msp430/gnugcc
+endif
 
 # Check if the user specified a programmer type with a .extra file.
 # If not, use bsl by default.

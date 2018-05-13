@@ -80,7 +80,14 @@
 /* mspgcc */
 #include <msp430.h>
 #include <legacymsp430.h>
-#else /* __MSPGCC__ */
+#elif defined(__GNUC__)
+/* GNU gcc */
+#include "gnugcc/msp430.h"
+#define nop() __nop()
+#define eint() __eint()
+#define dint() __dint()
+#define READ_SR __get_SR_register()
+#else /* __GNUC__ */
 /* old mspgcc3, forked mspgcc4 */
 #include <io.h>
 #include <signal.h>
@@ -398,6 +405,8 @@
 
 #undef norace
 
+#if defined(__MSPGCC__)
+
 #define MSP430REG_NORACE_EXPAND(type,name,addr) \
 norace static volatile type name asm(#addr)
 
@@ -413,6 +422,22 @@ MSP430REG_NORACE3(TYPE_##name,rename,name##_)
 
 #define MSP430REG_NORACE(name) \
 MSP430REG_NORACE3(TYPE_##name,name,name##_)
+
+#else /* __MSPGCC__ */
+
+#define MSP430REG_NORACE_EXPAND(type,name,addr) \
+norace extern volatile type name __asm__(#addr)
+
+#define MSP430REG_NORACE3(type,name,addr) \
+MSP430REG_NORACE_EXPAND(type,name,addr)
+
+#define MSP430REG_NORACE2(rename,name) \
+MSP430REG_NORACE3(TYPE_##name,rename,name)
+
+#define MSP430REG_NORACE(name) \
+MSP430REG_NORACE3(TYPE_##name,name,name)
+
+#endif /* __MSPGCC__ */
 
 // Avoid the type-punned pointer warnings from gcc 3.3, which are warning about
 // creating potentially broken object code.  Union casts are the appropriate work

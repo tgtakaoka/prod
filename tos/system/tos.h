@@ -1,5 +1,5 @@
 #if !defined(__CYGWIN__)
-#if defined(__MSP430__)
+#if defined(__MSPGCC__)
 #include <sys/inttypes.h>
 #else
 #include <inttypes.h>

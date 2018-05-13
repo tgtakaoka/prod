@@ -24,9 +24,11 @@ MSP_NESC_TARGET ?= msp430
 # are retired.
 #
 
+ifeq ($(GCC),msp430-gcc)
 HAS_MDATA = $(shell msp430-gcc --target-help | grep mdata-64k | awk '{print $1}')
 ifneq "$(HAS_MDATA)" ""
 PFLAGS += -mdata-64k
+endif
 endif
 
 $(call TOSMake_include_platform,z1)
