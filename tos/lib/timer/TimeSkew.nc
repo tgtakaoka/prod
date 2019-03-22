@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2004-2008 The Regents of the University of
- * California.  All rights reserved.
+ * Copyright (c) 2018, Eric B. Decker
+ * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -8,10 +8,12 @@
  *
  * - Redistributions of source code must retain the above copyright
  *   notice, this list of conditions and the following disclaimer.
+ *
  * - Redistributions in binary form must reproduce the above copyright
  *   notice, this list of conditions and the following disclaimer in the
  *   documentation and/or other materials provided with the
  *   distribution.
+ *
  * - Neither the name of the copyright holders nor the names of
  *   its contributors may be used to endorse or promote products derived
  *   from this software without specific prior written permission.
@@ -28,50 +30,34 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
 /**
- * Initialization code responsible for booting Epic to a usable state.
+ * The TinyOS timing system is based on various layers, ultimately
+ * tying to the underlying timing h/w.  Under various circumstances
+ * adjustments may be made by this underlying timing that can result
+ * in time skew.
  *
- * @author Prabal Dutta <prabal@cs.berkeley.edu>
+ * Typically this can occur when the RTC (Real Time Clock) subsystem
+ * has had its time adjusted for example via a GPS providing synchronized
+ * time.  If this skew is below a reasonable threshold (platform dependent)
+ * TimeSkew.skew(skew_val) will be signalled.  Beyond that threshold
+ * it might be better to reboot and reestablish reasonable time via
+ * those mechanisms.
+ *
+ * @author Eric B.Decker <cire831@gmail.com>
  */
 
-#include "hardware.h"
-
-module PlatformP {
-  provides {
-    interface Init;
-    interface Platform;
-  }
-  uses {
-    interface Init as MoteClockInit;
-    interface Init as MoteInit;
-    interface Init as LedsInit;
-  }
-}
-implementation {
-  command error_t Init.init() {
-    WDTCTL = WDTPW + WDTHOLD;
-    call MoteClockInit.init();
-    call MoteInit.init();
-    call LedsInit.init();
-    return SUCCESS;
-  }
-
-  async command uint32_t Platform.localTime()      { return 0; }
-  async command uint32_t Platform.usecsRaw()       { return 0; }
-  async command uint32_t Platform.usecsRawSize()   { return 0; }
-  async command uint32_t Platform.jiffiesRaw()     { return 0; }
-  async command uint32_t Platform.jiffiesRawSize() { return 0; }
-  async command bool     Platform.set_unaligned_traps(bool on_off) {
-    return FALSE;
-  }
-  async command int      Platform.getIntPriority(int irq_number) {
-    return 0;
-  }
-
-  default command error_t LedsInit.init() {
-    return SUCCESS;
-  }
+interface TimeSkew {
+  /**
+   * Signaled when the underlying timing system has detected timing
+   * skew.
+   *
+   * @param skew    estimated skew computed.  in millisecs (units platform
+   *                dependent, typically binary millisecs).
+   *                > 0, time has been moved into the future (we were slow).
+   *                < 0, time has been shifted backwards, (we were fast).
+   *                = 0, skew is beyond platform limits.
+   */
+  async event void skew(int32_t skew);
 }

@@ -41,6 +41,7 @@ configuration PlatformC {
   provides {
     interface Init as PlatformInit;
     interface Platform;
+    interface TimeSkew;
   }
   uses interface Init as PeripheralInit;
 }
@@ -50,6 +51,7 @@ implementation {
   Platform = PlatformP;
   PlatformInit = PlatformP;
   PeripheralInit = PlatformP.PeripheralInit;
+  TimeSkew = PlatformP.TimeSkew;
 
   PlatformP.Stack -> StackC;
 

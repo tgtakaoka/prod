@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2016, Eric B. Decker
+/* Copyright (c) 2016, 2018, Eric B. Decker
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,9 +40,9 @@
  * not is determined by how the chip is packaged.  There is no way to
  * determine from the chip header what is actually there.  Essentially
  * it is a platform thing.
- * 
+ *
  * TA0 is a Tmicro (usec) and TA1 is a Tmilli (msec, 32KiHz ticked).
- * 
+ *
  * All timer modules are the same, each has 5 capture registers and
  * the main Register (TAn->R).  The TAn_0 interrupt fires from the
  * CCR0 interrupt, and TAn_N interrupts for all other CCR registers
@@ -53,7 +52,7 @@
  * vector register.  They are prioritized and when IV is read the
  * highest priority interrupt is cleared.  The value from IV tells
  * which interrupt we should signal.
- * 
+ *
  * Interrupts on TAn_0 come from TAn->CCTL0.CCIFG (CCIE must be set)
  * and are NOT automatically cleared.  This must be done manually in
  * the interrupt handler.
@@ -62,7 +61,7 @@
  * must be set.  This happens else where.  Also when a module is enabled
  * its TAx->CTL.IE (TAIE) should be enabled.  This turns on wrap interrupts.
  * The NVIC enable and TAIE enable happen together.
- * 
+ *
  * This module is the connector from the interrupt to the actual driver.
  */
 
@@ -73,45 +72,54 @@ module HplMsp432TimerIntP {
     interface HplMsp432TimerInt as TimerAInt_0[uint8_t instance];
     interface HplMsp432TimerInt as TimerAInt_N[uint8_t instance];
   }
+  uses interface McuSleep;
 }
 implementation {
   void TA0_0_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     BITBAND_PERI(TIMER_A0->CCTL[0], TIMER_A_CCTLN_CCIFG_OFS) = 0;
+    call McuSleep.irq_preamble();
     signal TimerAInt_0.interrupt[0](0);
   }
 
   void TA0_N_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     uint8_t v = (TIMER_A0->IV) >> 1;
+    call McuSleep.irq_preamble();
     signal TimerAInt_N.interrupt[0](v);
   }
 
   void TA1_0_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     BITBAND_PERI(TIMER_A1->CCTL[0], TIMER_A_CCTLN_CCIFG_OFS) = 0;
+    call McuSleep.irq_preamble();
     signal TimerAInt_0.interrupt[1](0);
   }
 
   void TA1_N_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     uint8_t v = (TIMER_A1->IV) >> 1;
+    call McuSleep.irq_preamble();
     signal TimerAInt_N.interrupt[1](v);
   }
 
   void TA2_0_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     BITBAND_PERI(TIMER_A2->CCTL[0], TIMER_A_CCTLN_CCIFG_OFS) = 0;
+    call McuSleep.irq_preamble();
     signal TimerAInt_0.interrupt[2](0);
   }
 
   void TA2_N_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     uint8_t v = (TIMER_A2->IV) >> 1;
+    call McuSleep.irq_preamble();
     signal TimerAInt_N.interrupt[2](v);
   }
 
   void TA3_0_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     BITBAND_PERI(TIMER_A3->CCTL[0], TIMER_A_CCTLN_CCIFG_OFS) = 0;
+    call McuSleep.irq_preamble();
     signal TimerAInt_0.interrupt[3](0);
   }
 
   void TA3_N_Handler() @C() @spontaneous() __attribute__((interrupt)) {
     uint8_t v = (TIMER_A3->IV) >> 1;
+    call McuSleep.irq_preamble();
     signal TimerAInt_N.interrupt[3](v);
   }
 
